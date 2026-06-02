@@ -118,6 +118,7 @@
       <textarea id="reason" rows="3" placeholder="例：発熱のため" required></textarea>
     </div>
 
+    <div id="formError" class="message error" style="display:none;"></div>
     <button type="submit" class="submit-btn" id="submitBtn">送信する</button>
   </form>
 
@@ -145,6 +146,18 @@
       el.className = 'message ' + type;
       el.textContent = text;
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 送信ボタン直上に表示する入力エラー
+    function showFormError(text) {
+      const el = document.getElementById('formError');
+      el.textContent = text;
+      el.style.display = 'block';
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function clearFormError() {
+      document.getElementById('formError').style.display = 'none';
     }
 
     function buildPeriodGrid() {
@@ -197,9 +210,10 @@
     document.getElementById('absenceForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
+      clearFormError();
 
       if (!userId) {
-        showMessage('ユーザー情報を取得できませんでした。一度閉じて開き直してください。', 'error');
+        showFormError('ユーザー情報を取得できませんでした。一度閉じて開き直してください。');
         return;
       }
 
@@ -210,20 +224,20 @@
         .map(cb => cb.value);
 
       if (!studentName) {
-        showMessage('生徒名を入力してください。', 'error');
+        showFormError('生徒名を入力してください。');
         document.getElementById('studentName').focus();
         return;
       }
       if (!absenceDate) {
-        showMessage('欠席日を選択してください。', 'error');
+        showFormError('欠席日を選択してください。');
         return;
       }
       if (periods.length === 0) {
-        showMessage('時限を1つ以上選択してください。', 'error');
+        showFormError('時限を1つ以上選択してください。');
         return;
       }
       if (!reason) {
-        showMessage('理由を入力してください。', 'error');
+        showFormError('理由を入力してください。');
         document.getElementById('reason').focus();
         return;
       }
@@ -258,7 +272,7 @@
           }
         }, 1500);
       } catch (err) {
-        showMessage('送信に失敗しました: ' + err.message, 'error');
+        showFormError('送信に失敗しました: ' + err.message);
         btn.disabled = false;
         btn.textContent = '送信する';
       }
