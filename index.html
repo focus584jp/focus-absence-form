@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>欠席連絡</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: #f5f5f5;
+      padding: 16px;
+      color: #333;
+    }
+    .header {
+      background: #2E86AB;
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-weight: bold;
+      font-size: 18px;
+      text-align: center;
+    }
+    .form-group {
+      background: white;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    select, input[type="text"], input[type="date"], textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      background: #fff;
+      color: #333;
+      appearance: none;
+    }
+    select:disabled {
+      background: #eeeeee;
+      color: #333;
+      -webkit-text-fill-color: #333;
+      opacity: 1;
+    }
+    .period-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .period-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      background: white;
+    }
+    .period-item.selected {
+      border-color: #2E86AB;
+      background: #e8f4f8;
+    }
+    .period-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .period-label { font-size: 14px; }
+    .period-time { font-size: 12px; color: #888; }
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: #2E86AB;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .submit-btn:disabled { background: #aaa; }
+    .message { padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; white-space: pre-line; }
+    .message.error { background: #fdecea; color: #c62828; }
+    .message.success { background: #e8f5e9; color: #2e7d32; }
+  </style>
+</head>
+<body>
+  <div class="header">欠席連絡</div>
+  <div id="message"></div>
+
+  <form id="absenceForm" novalidate>
+    <div class="form-group">
+      <label for="classroom">教室</label>
+      <select id="classroom" required></select>
+    </div>
+
+    <div class="form-group">
+      <label for="studentName">生徒名</label>
+      <input type="text" id="studentName" placeholder="例：山田 太郎" required>
+    </div>
+
+    <div class="form-group">
+      <label for="absenceDate">欠席日</label>
+      <input type="date" id="absenceDate" required>
+    </div>
+
+    <div class="form-group">
+      <label>時限（複数選択可）</label>
+      <div class="period-grid" id="periodGrid"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="reason">理由</label>
+      <textarea id="reason" rows="3" placeholder="例：発熱のため" required></textarea>
+    </div>
+
+    <button type="submit" class="submit-btn" id="submitBtn">送信する</button>
+  </form>
+
+  <script>
+    // ===== 設定（環境に合わせて変更）=====
+    const LIFF_ID = '2010261022-kpPzed7b';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbywAFTtPxH5dU4TVnBvXhbjQy10z7cqwWUS4P7q9bg6crE_v8Sfmz117cYfIWRtb7Cpgw/exec';
+    const CLASSROOMS = ['稲毛', '妙典', '西千葉', '都賀', '新検見川', '稲毛海岸', '蘇我', '五井', '四街道', '鎌取'];
+    const PERIODS = [
+      { label: '2限', time: '14:00〜' },
+      { label: '3限', time: '15:00〜' },
+      { label: '4限', time: '16:00〜' },
+      { label: '5限', time: '17:00〜' },
+      { label: '6限', time: '18:00〜' },
+      { label: '7限', time: '19:00〜' },
+      { label: '8限', time: '20:00〜' },
+      { label: '9限', time: '21:00〜' },
+    ];
+    // =====================================
+
+    let userId = null;
+
+    function showMessage(text, type) {
+      const el = document.getElementById('message');
+      el.className = 'message ' + type;
+      el.textContent = text;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function buildClassroomSelect() {
+      const select = document.getElementById('classroom');
+      CLASSROOMS.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+    }
+
+    function selectClassroom(name) {
+      if (!name) return;
+      document.getElementById('classroom').value = name;
+    }
+
+    function buildPeriodGrid() {
+      const grid = document.getElementById('periodGrid');
+      PERIODS.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'period-item';
+        item.innerHTML =
+          '<input type="checkbox" id="p_' + p.label + '" value="' + p.label + '(' + p.time + ')">' +
+          '<div><div class="period-label">' + p.label + '</div>' +
+          '<div class="period-time">' + p.time + '</div></div>';
+        item.addEventListener('click', function(e) {
+          const cb = this.querySelector('input');
+          if (e.target !== cb) cb.checked = !cb.checked;
+          this.classList.toggle('selected', cb.checked);
+        });
+        grid.appendChild(item);
+      });
+    }
+
+    function setTodayAsDefault() {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      document.getElementById('absenceDate').value = y + '-' + m + '-' + d;
+    }
+
+    document.getElementById('absenceForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+
+      if (!userId) {
+        showMessage('ユーザー情報を取得できませんでした。一度閉じて開き直してください。', 'error');
+        return;
+      }
+
+      const classroom = document.getElementById('classroom').value;
+      const studentName = document.getElementById('studentName').value.trim();
+      const absenceDate = document.getElementById('absenceDate').value;
+      const reason = document.getElementById('reason').value.trim();
+      const periods = Array.from(document.querySelectorAll('#periodGrid input:checked'))
+        .map(cb => cb.value);
+
+      if (!classroom) {
+        showMessage('教室を選択してください。', 'error');
+        return;
+      }
+      if (!studentName) {
+        showMessage('生徒名を入力してください。', 'error');
+        document.getElementById('studentName').focus();
+        return;
+      }
+      if (!absenceDate) {
+        showMessage('欠席日を選択してください。', 'error');
+        return;
+      }
+      if (periods.length === 0) {
+        showMessage('時限を1つ以上選択してください。', 'error');
+        return;
+      }
+      if (!reason) {
+        showMessage('理由を入力してください。', 'error');
+        document.getElementById('reason').focus();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '送信中...';
+
+      const payload = {
+        userId: userId,
+        classroom: classroom,
+        studentName: studentName,
+        absenceDate: absenceDate,
+        periods: periods,
+        reason: reason,
+      };
+
+      try {
+        // GASは別オリジンのためCORSでレスポンスを読めない。no-corsで送信し、
+        // 受付確認はGASからのLINEプッシュメッセージで通知される。
+        await fetch(GAS_URL + '?action=absence', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload),
+        });
+        document.getElementById('absenceForm').style.display = 'none';
+        showMessage('✅ 欠席連絡を送信しました。\nLINEに確認メッセージが届きます。\nこの画面は自動で閉じます。', 'success');
+        window.scrollTo(0, 0);
+        setTimeout(function() {
+          if (liff.isInClient()) {
+            liff.closeWindow();
+          }
+        }, 1500);
+      } catch (err) {
+        showMessage('送信に失敗しました: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = '送信する';
+      }
+    });
+
+    async function main() {
+      buildClassroomSelect();
+      buildPeriodGrid();
+      setTodayAsDefault();
+
+      try {
+        await liff.init({ liffId: LIFF_ID });
+      } catch (err) {
+        showMessage('LIFFの初期化に失敗しました: ' + err.message, 'error');
+        return;
+      }
+
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+
+      try {
+        const profile = await liff.getProfile();
+        userId = profile.userId;
+      } catch (err) {
+        showMessage('ユーザー情報の取得に失敗しました: ' + err.message, 'error');
+        return;
+      }
+
+      // Botから渡された教室名（?classroom=）を固定表示する
+      const classroom = new URLSearchParams(location.search).get('classroom') || '';
+      if (classroom) {
+        selectClassroom(classroom);
+        document.getElementById('classroom').disabled = true;
+      }
+    }
+
+    main();
+  </script>
+</body>
+</html>
