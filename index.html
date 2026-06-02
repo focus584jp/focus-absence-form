@@ -274,14 +274,12 @@
           headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify(payload),
         });
-        document.getElementById('absenceForm').style.display = 'none';
-        showMessage('✅ 欠席連絡を送信しました。\nLINEに確認メッセージが届きます。\nこの画面は自動で閉じます。', 'success');
-        window.scrollTo(0, 0);
-        setTimeout(function() {
-          if (liff.isInClient()) {
-            liff.closeWindow();
-          }
-        }, 1500);
+        if (liff.isInClient()) {
+          liff.closeWindow();
+        } else {
+          document.getElementById('absenceForm').style.display = 'none';
+          showMessage('送信しました。', 'success');
+        }
       } catch (err) {
         showMessage('送信に失敗しました: ' + err.message, 'error');
         btn.disabled = false;
