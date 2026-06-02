@@ -13,12 +13,13 @@
       padding: 16px;
       color: #333333;
     }
-    .classroom-title {
-      color: #143778;
-      font-size: 26px;
-      font-weight: bold;
-      text-align: center;
-      margin: 8px 0 20px;
+    .classroom-display {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #eeeeee;
+      color: #333333;
+      font-size: 16px;
     }
     .form-group {
       background: white;
@@ -89,10 +90,14 @@
   </style>
 </head>
 <body>
-  <h1 class="classroom-title" id="classroomTitle">欠席連絡</h1>
   <div id="message"></div>
 
   <form id="absenceForm" novalidate>
+    <div class="form-group">
+      <label>教室</label>
+      <div class="classroom-display" id="classroomDisplay">-</div>
+    </div>
+
     <div class="form-group">
       <label for="studentName">生徒名</label>
       <input type="text" id="studentName" placeholder="例：山田 太郎" required>
@@ -262,10 +267,10 @@
         return;
       }
 
-      // Botから渡された教室名（?classroom=）をタイトルに表示する
+      // Botから渡された教室名（?classroom=）を固定表示する
       classroomName = new URLSearchParams(location.search).get('classroom') || '';
       if (classroomName) {
-        document.getElementById('classroomTitle').textContent = classroomName + '教室';
+        document.getElementById('classroomDisplay').textContent = classroomName;
       }
     }
 
