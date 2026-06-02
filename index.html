@@ -9,48 +9,39 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-      background: #f5f5f5;
+      background: #F2F4F7;
       padding: 16px;
-      color: #333;
+      color: #333333;
     }
-    .header {
-      background: #2E86AB;
-      color: white;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
+    .classroom-title {
+      color: #143778;
+      font-size: 26px;
       font-weight: bold;
-      font-size: 18px;
       text-align: center;
+      margin: 8px 0 20px;
     }
     .form-group {
       background: white;
       border-radius: 8px;
-      padding: 14px;
+      padding: 16px;
       margin-bottom: 12px;
     }
     label {
       display: block;
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 6px;
+      font-size: 17px;
+      color: #143778;
+      margin-bottom: 8px;
       font-weight: bold;
     }
-    select, input[type="text"], input[type="date"], textarea {
+    input[type="text"], input[type="date"], textarea {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 16px;
       background: #fff;
-      color: #333;
+      color: #333333;
       appearance: none;
-    }
-    select:disabled {
-      background: #eeeeee;
-      color: #333;
-      -webkit-text-fill-color: #333;
-      opacity: 1;
     }
     .period-grid {
       display: grid;
@@ -61,51 +52,47 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px;
+      padding: 10px;
       border: 1px solid #ddd;
       border-radius: 6px;
       cursor: pointer;
       background: white;
     }
     .period-item.selected {
-      border-color: #2E86AB;
-      background: #e8f4f8;
+      border-color: #143778;
+      background: #DDE7F7;
     }
     .period-item input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       cursor: pointer;
+      accent-color: #143778;
     }
-    .period-label { font-size: 14px; }
+    .period-label { font-size: 15px; }
     .period-time { font-size: 12px; color: #888; }
     .submit-btn {
       width: 100%;
-      padding: 14px;
-      background: #2E86AB;
+      padding: 16px;
+      background: #E67832;
       color: white;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: bold;
       cursor: pointer;
       margin-top: 8px;
     }
     .submit-btn:disabled { background: #aaa; }
-    .message { padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; white-space: pre-line; }
+    .message { padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 15px; white-space: pre-line; }
     .message.error { background: #fdecea; color: #c62828; }
-    .message.success { background: #e8f5e9; color: #2e7d32; }
+    .message.success { background: #D7ECDD; color: #1e6b3a; }
   </style>
 </head>
 <body>
-  <div class="header">欠席連絡</div>
+  <h1 class="classroom-title" id="classroomTitle">欠席連絡</h1>
   <div id="message"></div>
 
   <form id="absenceForm" novalidate>
-    <div class="form-group">
-      <label for="classroom">教室</label>
-      <select id="classroom" required></select>
-    </div>
-
     <div class="form-group">
       <label for="studentName">生徒名</label>
       <input type="text" id="studentName" placeholder="例：山田 太郎" required>
@@ -133,7 +120,6 @@
     // ===== 設定（環境に合わせて変更）=====
     const LIFF_ID = '2010261022-kpPzed7b';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbywAFTtPxH5dU4TVnBvXhbjQy10z7cqwWUS4P7q9bg6crE_v8Sfmz117cYfIWRtb7Cpgw/exec';
-    const CLASSROOMS = ['稲毛', '妙典', '西千葉', '都賀', '新検見川', '稲毛海岸', '蘇我', '五井', '四街道', '鎌取'];
     const PERIODS = [
       { label: '2限', time: '14:00〜' },
       { label: '3限', time: '15:00〜' },
@@ -147,27 +133,13 @@
     // =====================================
 
     let userId = null;
+    let classroomName = '';
 
     function showMessage(text, type) {
       const el = document.getElementById('message');
       el.className = 'message ' + type;
       el.textContent = text;
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    function buildClassroomSelect() {
-      const select = document.getElementById('classroom');
-      CLASSROOMS.forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
-      });
-    }
-
-    function selectClassroom(name) {
-      if (!name) return;
-      document.getElementById('classroom').value = name;
     }
 
     function buildPeriodGrid() {
@@ -205,17 +177,12 @@
         return;
       }
 
-      const classroom = document.getElementById('classroom').value;
       const studentName = document.getElementById('studentName').value.trim();
       const absenceDate = document.getElementById('absenceDate').value;
       const reason = document.getElementById('reason').value.trim();
       const periods = Array.from(document.querySelectorAll('#periodGrid input:checked'))
         .map(cb => cb.value);
 
-      if (!classroom) {
-        showMessage('教室を選択してください。', 'error');
-        return;
-      }
       if (!studentName) {
         showMessage('生徒名を入力してください。', 'error');
         document.getElementById('studentName').focus();
@@ -240,7 +207,7 @@
 
       const payload = {
         userId: userId,
-        classroom: classroom,
+        classroom: classroomName,
         studentName: studentName,
         absenceDate: absenceDate,
         periods: periods,
@@ -272,7 +239,6 @@
     });
 
     async function main() {
-      buildClassroomSelect();
       buildPeriodGrid();
       setTodayAsDefault();
 
@@ -296,11 +262,10 @@
         return;
       }
 
-      // Botから渡された教室名（?classroom=）を固定表示する
-      const classroom = new URLSearchParams(location.search).get('classroom') || '';
-      if (classroom) {
-        selectClassroom(classroom);
-        document.getElementById('classroom').disabled = true;
+      // Botから渡された教室名（?classroom=）をタイトルに表示する
+      classroomName = new URLSearchParams(location.search).get('classroom') || '';
+      if (classroomName) {
+        document.getElementById('classroomTitle').textContent = classroomName + '教室';
       }
     }
 
