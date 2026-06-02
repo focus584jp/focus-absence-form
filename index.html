@@ -165,6 +165,27 @@
       });
     }
 
+    // GASからuserIdで教室名を取得（JSONP。別オリジンのためscriptタグで読む）
+    function fetchClassroom(uid) {
+      return new Promise(function(resolve) {
+        const cb = 'jsonp_' + Date.now();
+        const script = document.createElement('script');
+        const timer = setTimeout(function() { cleanup(); resolve(null); }, 8000);
+        function cleanup() {
+          clearTimeout(timer);
+          delete window[cb];
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+        window[cb] = function(data) {
+          cleanup();
+          resolve(data && data.classroom ? data.classroom : null);
+        };
+        script.onerror = function() { cleanup(); resolve(null); };
+        script.src = GAS_URL + '?action=getClassroom&userId=' + encodeURIComponent(uid) + '&callback=' + cb;
+        document.body.appendChild(script);
+      });
+    }
+
     function setTodayAsDefault() {
       const today = new Date();
       const y = today.getFullYear();
@@ -267,10 +288,16 @@
         return;
       }
 
-      // Botから渡された教室名（?classroom=）を固定表示する
+      // 教室名を決定：URLパラメータ優先、なければuserIdからGASに問い合わせ
       classroomName = new URLSearchParams(location.search).get('classroom') || '';
+      if (!classroomName) {
+        classroomName = await fetchClassroom(userId) || '';
+      }
       if (classroomName) {
         document.getElementById('classroomDisplay').textContent = classroomName;
+      } else {
+        document.getElementById('classroomDisplay').textContent = '未登録';
+        showMessage('教室が未登録です。LINEのメニューから教室登録を行ってください。', 'error');
       }
     }
 
