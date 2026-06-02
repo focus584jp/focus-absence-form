@@ -44,6 +44,19 @@
       color: #333333;
       appearance: none;
     }
+    .field-error {
+      color: #c62828;
+      font-size: 13px;
+      font-weight: bold;
+      margin-left: 6px;
+    }
+    input.invalid, textarea.invalid {
+      border-color: #c62828;
+      background: #fff6f6;
+    }
+    .period-grid.invalid .period-item {
+      border-color: #c62828;
+    }
     .period-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -99,26 +112,25 @@
     </div>
 
     <div class="form-group">
-      <label for="studentName">生徒名</label>
+      <label for="studentName">生徒名 <span class="field-error" id="err-studentName"></span></label>
       <input type="text" id="studentName" placeholder="例：山田 太郎" required>
     </div>
 
     <div class="form-group">
-      <label for="absenceDate">欠席日</label>
+      <label for="absenceDate">欠席日 <span class="field-error" id="err-absenceDate"></span></label>
       <input type="date" id="absenceDate" required>
     </div>
 
     <div class="form-group">
-      <label>時限（複数選択可）</label>
+      <label>時限（複数選択可） <span class="field-error" id="err-periodGrid"></span></label>
       <div class="period-grid" id="periodGrid"></div>
     </div>
 
     <div class="form-group">
-      <label for="reason">理由</label>
+      <label for="reason">理由 <span class="field-error" id="err-reason"></span></label>
       <textarea id="reason" rows="3" placeholder="例：発熱のため" required></textarea>
     </div>
 
-    <div id="formError" class="message error" style="display:none;"></div>
     <button type="submit" class="submit-btn" id="submitBtn">送信する</button>
   </form>
 
@@ -148,16 +160,23 @@
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    // 送信ボタン直上に表示する入力エラー
-    function showFormError(text) {
-      const el = document.getElementById('formError');
-      el.textContent = text;
-      el.style.display = 'block';
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // 各項目のタイトル横に警告を表示し、入力枠を赤くする
+    function setFieldError(id, message) {
+      const err = document.getElementById('err-' + id);
+      if (err) err.textContent = '※' + message;
+      const el = document.getElementById(id);
+      if (el) el.classList.add('invalid');
     }
 
-    function clearFormError() {
-      document.getElementById('formError').style.display = 'none';
+    function clearFieldError(id) {
+      const err = document.getElementById('err-' + id);
+      if (err) err.textContent = '';
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('invalid');
+    }
+
+    function clearAllFieldErrors() {
+      ['studentName', 'absenceDate', 'periodGrid', 'reason'].forEach(clearFieldError);
     }
 
     function buildPeriodGrid() {
@@ -173,6 +192,7 @@
           const cb = this.querySelector('input');
           if (e.target !== cb) cb.checked = !cb.checked;
           this.classList.toggle('selected', cb.checked);
+          clearFieldError('periodGrid');
         });
         grid.appendChild(item);
       });
@@ -210,10 +230,10 @@
     document.getElementById('absenceForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
-      clearFormError();
+      clearAllFieldErrors();
 
       if (!userId) {
-        showFormError('ユーザー情報を取得できませんでした。一度閉じて開き直してください。');
+        showMessage('ユーザー情報を取得できませんでした。一度閉じて開き直してください。', 'error');
         return;
       }
 
@@ -223,22 +243,13 @@
       const periods = Array.from(document.querySelectorAll('#periodGrid input:checked'))
         .map(cb => cb.value);
 
-      if (!studentName) {
-        showFormError('生徒名を入力してください。');
-        document.getElementById('studentName').focus();
-        return;
-      }
-      if (!absenceDate) {
-        showFormError('欠席日を選択してください。');
-        return;
-      }
-      if (periods.length === 0) {
-        showFormError('時限を1つ以上選択してください。');
-        return;
-      }
-      if (!reason) {
-        showFormError('理由を入力してください。');
-        document.getElementById('reason').focus();
+      let firstInvalid = null;
+      if (!studentName) { setFieldError('studentName', '入力してください'); firstInvalid = firstInvalid || 'studentName'; }
+      if (!absenceDate) { setFieldError('absenceDate', '選択してください'); firstInvalid = firstInvalid || 'absenceDate'; }
+      if (periods.length === 0) { setFieldError('periodGrid', '1つ以上選択してください'); firstInvalid = firstInvalid || 'periodGrid'; }
+      if (!reason) { setFieldError('reason', '入力してください'); firstInvalid = firstInvalid || 'reason'; }
+      if (firstInvalid) {
+        document.getElementById(firstInvalid).scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
@@ -272,7 +283,7 @@
           }
         }, 1500);
       } catch (err) {
-        showFormError('送信に失敗しました: ' + err.message);
+        showMessage('送信に失敗しました: ' + err.message, 'error');
         btn.disabled = false;
         btn.textContent = '送信する';
       }
@@ -314,6 +325,10 @@
         showMessage('教室が未登録です。LINEのメニューから教室登録を行ってください。', 'error');
       }
     }
+
+    ['studentName', 'absenceDate', 'reason'].forEach(function(id) {
+      document.getElementById(id).addEventListener('input', function() { clearFieldError(id); });
+    });
 
     main();
   </script>
