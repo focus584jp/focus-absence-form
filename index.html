@@ -311,8 +311,8 @@
         return;
       }
 
-      // 教室名を決定：URLパラメータ優先、なければuserIdからGASに問い合わせ
-      classroomName = new URLSearchParams(location.search).get('classroom') || '';
+      // 教室名を決定：URLパラメータは既に即時表示済み。
+      // 無い場合のみ、userIdからGASに問い合わせて補完する。
       if (!classroomName) {
         classroomName = await fetchClassroom(userId) || '';
       }
@@ -322,6 +322,13 @@
         document.getElementById('classroomDisplay').textContent = '未登録';
         showMessage('教室が未登録です。LINEのメニューから教室登録を行ってください。', 'error');
       }
+    }
+
+    // URLパラメータに教室名があれば、liff.init()を待たず即時表示する
+    // （リッチメニュー経由はURLに教室名が入るため遅延なく入力される）
+    classroomName = new URLSearchParams(location.search).get('classroom') || '';
+    if (classroomName) {
+      document.getElementById('classroomDisplay').textContent = classroomName;
     }
 
     ['studentName', 'absenceDate', 'reason'].forEach(function(id) {
