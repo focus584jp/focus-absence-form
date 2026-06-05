@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>欠席連絡</title>
+  <script>
+    // LIFFが /select.html 等のサブパスへ遷移する際、エンドポイント(index.html)が
+    // 一瞬読み込まれて欠席連絡フォームがちらつく。liff.state があれば直後に
+    // リダイレクトされるので、描画前にページ全体を非表示にしてちらつきを防ぐ。
+    if (new URLSearchParams(location.search).has('liff.state')) {
+      document.documentElement.style.visibility = 'hidden';
+    }
+  </script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
