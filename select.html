@@ -40,36 +40,19 @@
     // ===== 設定 =====
     const LIFF_ID = '2010272855-LUwv7nxh';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbywAFTtPxH5dU4TVnBvXhbjQy10z7cqwWUS4P7q9bg6crE_v8Sfmz117cYfIWRtb7Cpgw/exec';
+    // 教室一覧（GAS問い合わせを待たず即描画するため直書き）。
+    // 教室を増減する場合は GAS の Config.gs の CLASSROOMS も合わせて更新すること。
+    const CLASSROOMS = ['稲毛', '妙典', '西千葉', '都賀', '新検見川', '稲毛海岸', '蘇我', '五井', '四街道', '鎌取'];
     // ================
 
     let userId = null;
+    let userIdReady = null; // liff.initでuserIdを取得する非同期処理（登録時に待つ）
     let submitting = false;
 
     function showMessage(text, type) {
       const el = document.getElementById('message');
       el.className = 'message ' + type;
       el.textContent = text;
-    }
-
-    // GASから教室一覧を取得（JSONP。別オリジンのためscriptタグで読む）
-    function fetchClassrooms() {
-      return new Promise(function (resolve) {
-        const cb = 'jsonp_' + Date.now();
-        const script = document.createElement('script');
-        const timer = setTimeout(function () { cleanup(); resolve([]); }, 8000);
-        function cleanup() {
-          clearTimeout(timer);
-          delete window[cb];
-          if (script.parentNode) script.parentNode.removeChild(script);
-        }
-        window[cb] = function (data) {
-          cleanup();
-          resolve(data && data.classrooms ? data.classrooms : []);
-        };
-        script.onerror = function () { cleanup(); resolve([]); };
-        script.src = GAS_URL + '?action=getClassrooms&callback=' + cb;
-        document.body.appendChild(script);
-      });
     }
 
     function renderButtons(classrooms) {
@@ -86,15 +69,16 @@
 
     async function register(classroom, btn) {
       if (submitting) return;
-      if (!userId) {
-        showMessage('ユーザー情報を取得できませんでした。一度閉じて開き直してください。', 'error');
-        return;
-      }
       submitting = true;
       Array.prototype.forEach.call(document.querySelectorAll('.room-btn'), function (b) { b.disabled = true; });
       btn.textContent = classroom + '（登録中…）';
 
       try {
+        // userIdは裏で取得中。まだなら待ってから送信する。
+        await userIdReady;
+        if (!userId) {
+          throw new Error('ユーザー情報を取得できませんでした。一度閉じて開き直してください。');
+        }
         // GASは別オリジンのためCORSでレスポンスを読めない。no-corsで送信し、
         // 確認はGASからのLINEプッシュメッセージで通知される。
         await fetch(GAS_URL + '?action=register_classroom', {
@@ -116,30 +100,24 @@
       }
     }
 
-    async function main() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
-      } catch (err) {
-        showMessage('LIFFの初期化に失敗しました: ' + err.message, 'error');
-        return;
-      }
-      if (!liff.isLoggedIn()) {
-        liff.login();
-        return;
-      }
-      try {
-        const profile = await liff.getProfile();
-        userId = profile.userId;
-      } catch (err) {
-        showMessage('ユーザー情報の取得に失敗しました: ' + err.message, 'error');
-        return;
-      }
-      const classrooms = await fetchClassrooms();
-      if (classrooms.length === 0) {
-        showMessage('教室一覧を取得できませんでした。一度閉じて開き直してください。', 'error');
-        return;
-      }
-      renderButtons(classrooms);
+    function main() {
+      // 教室ボタンは直書きリストから即描画（GAS問い合わせもliff.initも待たない）
+      renderButtons(CLASSROOMS);
+
+      // userIdは裏で並行取得。登録(タップ)時に userIdReady を待つ。
+      userIdReady = (async function () {
+        try {
+          await liff.init({ liffId: LIFF_ID });
+          if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+          }
+          const profile = await liff.getProfile();
+          userId = profile.userId;
+        } catch (err) {
+          showMessage('ユーザー情報の取得に失敗しました: ' + err.message, 'error');
+        }
+      })();
     }
 
     main();
