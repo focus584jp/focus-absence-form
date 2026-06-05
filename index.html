@@ -4,12 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>欠席連絡</title>
-  <script>
-    // ちらつき防止：描画前にページ全体を隠す。LIFFが /select.html 等へ
-    // リダイレクトする場合は liff.init() 内で遷移し、再表示コード(main内)に
-    // 到達しないため隠れたまま遷移する。通常表示の時だけ main() で再表示する。
-    document.documentElement.style.visibility = 'hidden';
-  </script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -300,13 +294,9 @@
       try {
         await liff.init({ liffId: LIFF_ID });
       } catch (err) {
-        document.documentElement.style.visibility = '';
         showMessage('LIFFの初期化に失敗しました: ' + err.message, 'error');
         return;
       }
-
-      // ここに到達 = select.html等へリダイレクトされない通常表示。再表示する。
-      document.documentElement.style.visibility = '';
 
       if (!liff.isLoggedIn()) {
         liff.login();
