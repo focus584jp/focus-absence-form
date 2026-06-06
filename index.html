@@ -62,6 +62,11 @@
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
+    .name-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
     .period-item {
       display: flex;
       align-items: center;
@@ -112,8 +117,11 @@
     </div>
 
     <div class="form-group">
-      <label for="studentName">生徒名 <span class="field-error" id="err-studentName"></span></label>
-      <input type="text" id="studentName" placeholder="例：山田 太郎" required>
+      <label>生徒名 <span class="field-error" id="err-lastName"></span><span class="field-error" id="err-firstName"></span></label>
+      <div class="name-grid">
+        <input type="text" id="lastName" placeholder="姓：山田" required>
+        <input type="text" id="firstName" placeholder="名：太郎" required>
+      </div>
     </div>
 
     <div class="form-group">
@@ -176,7 +184,7 @@
     }
 
     function clearAllFieldErrors() {
-      ['studentName', 'absenceDate', 'periodGrid', 'reason'].forEach(clearFieldError);
+      ['lastName', 'firstName', 'absenceDate', 'periodGrid', 'reason'].forEach(clearFieldError);
     }
 
     function buildPeriodGrid() {
@@ -237,14 +245,17 @@
         return;
       }
 
-      const studentName = document.getElementById('studentName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const firstName = document.getElementById('firstName').value.trim();
+      const studentName = lastName + ' ' + firstName;
       const absenceDate = document.getElementById('absenceDate').value;
       const reason = document.getElementById('reason').value.trim();
       const periods = Array.from(document.querySelectorAll('#periodGrid input:checked'))
         .map(cb => cb.value);
 
       let firstInvalid = null;
-      if (!studentName) { setFieldError('studentName', '入力してください'); firstInvalid = firstInvalid || 'studentName'; }
+      if (!lastName) { setFieldError('lastName', '姓を入力してください'); firstInvalid = firstInvalid || 'lastName'; }
+      if (!firstName) { setFieldError('firstName', '名を入力してください'); firstInvalid = firstInvalid || 'firstName'; }
       if (!absenceDate) { setFieldError('absenceDate', '選択してください'); firstInvalid = firstInvalid || 'absenceDate'; }
       if (periods.length === 0) { setFieldError('periodGrid', '1つ以上選択してください'); firstInvalid = firstInvalid || 'periodGrid'; }
       if (!reason) { setFieldError('reason', '入力してください'); firstInvalid = firstInvalid || 'reason'; }
@@ -331,7 +342,7 @@
       document.getElementById('classroomDisplay').textContent = classroomName;
     }
 
-    ['studentName', 'absenceDate', 'reason'].forEach(function(id) {
+    ['lastName', 'firstName', 'absenceDate', 'reason'].forEach(function(id) {
       document.getElementById(id).addEventListener('input', function() { clearFieldError(id); });
     });
 
