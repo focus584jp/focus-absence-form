@@ -146,7 +146,7 @@
     // ===== 設定（環境に合わせて変更）=====
     const LIFF_ID = '2010272855-O3sIeywy';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbywAFTtPxH5dU4TVnBvXhbjQy10z7cqwWUS4P7q9bg6crE_v8Sfmz117cYfIWRtb7Cpgw/exec';
-    const PERIODS = [
+    const DEFAULT_PERIODS = [
       { label: '2限', time: '14:00〜' },
       { label: '3限', time: '15:00〜' },
       { label: '4限', time: '16:00〜' },
@@ -187,9 +187,10 @@
       ['lastName', 'firstName', 'absenceDate', 'periodGrid', 'reason'].forEach(clearFieldError);
     }
 
-    function buildPeriodGrid() {
+    function buildPeriodGrid(periods) {
       const grid = document.getElementById('periodGrid');
-      PERIODS.forEach(p => {
+      grid.innerHTML = '';
+      periods.forEach(p => {
         const item = document.createElement('div');
         item.className = 'period-item';
         item.innerHTML =
@@ -223,6 +224,23 @@
         };
         script.onerror = function() { cleanup(); resolve(null); };
         script.src = GAS_URL + '?action=getClassroom&userId=' + encodeURIComponent(uid) + '&callback=' + cb;
+        document.body.appendChild(script);
+      });
+    }
+
+    function fetchConfigJsonp() {
+      return new Promise(function (resolve) {
+        const cb = 'jsonp_cfg_' + Date.now();
+        const script = document.createElement('script');
+        const timer = setTimeout(function () { cleanup(); resolve(null); }, 8000);
+        function cleanup() {
+          clearTimeout(timer);
+          delete window[cb];
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+        window[cb] = function (data) { cleanup(); resolve(data || null); };
+        script.onerror = function () { cleanup(); resolve(null); };
+        script.src = GAS_URL + '?action=getConfig&callback=' + cb;
         document.body.appendChild(script);
       });
     }
@@ -299,7 +317,14 @@
     });
 
     async function main() {
-      buildPeriodGrid();
+      buildPeriodGrid(DEFAULT_PERIODS);
+      // 裏で最新の時限定義を取得。ユーザーが選択を始めていなければ差し替える
+      fetchConfigJsonp().then(function (config) {
+        const anyChecked = document.querySelectorAll('#periodGrid input:checked').length > 0;
+        if (config && config.periods && config.periods.length && !anyChecked) {
+          buildPeriodGrid(config.periods);
+        }
+      });
       setTodayAsDefault();
 
       try {

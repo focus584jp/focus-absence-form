@@ -44,9 +44,8 @@
     // ===== 設定 =====
     const LIFF_ID = '2010272855-LUwv7nxh';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbywAFTtPxH5dU4TVnBvXhbjQy10z7cqwWUS4P7q9bg6crE_v8Sfmz117cYfIWRtb7Cpgw/exec';
-    // 教室一覧（GAS問い合わせを待たず即描画するため直書き）。
-    // 教室を増減する場合は GAS の Config.gs の CLASSROOMS も合わせて更新すること。
-    const CLASSROOMS = ['稲毛', '妙典', '西千葉', '都賀', '新検見川', '稲毛海岸', '蘇我', '五井', '四街道', '鎌取'];
+    // 即描画用フォールバック。最新はGASのgetConfigから取得して差し替える。
+    const DEFAULT_CLASSROOMS = ['稲毛', '妙典', '西千葉', '都賀', '新検見川', '稲毛海岸', '蘇我', '五井', '四街道', '鎌取'];
     // ================
 
     let userId = null;
@@ -68,6 +67,27 @@
         btn.textContent = name;
         btn.addEventListener('click', function () { register(name, btn); });
         grid.appendChild(btn);
+      });
+    }
+
+    // GASから教室一覧を取得（JSONP。別オリジンのためscriptタグで読む）
+    function fetchClassroomsJsonp() {
+      return new Promise(function (resolve) {
+        const cb = 'jsonp_' + Date.now();
+        const script = document.createElement('script');
+        const timer = setTimeout(function () { cleanup(); resolve(null); }, 8000);
+        function cleanup() {
+          clearTimeout(timer);
+          delete window[cb];
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+        window[cb] = function (data) {
+          cleanup();
+          resolve(data && data.classrooms && data.classrooms.length ? data.classrooms : null);
+        };
+        script.onerror = function () { cleanup(); resolve(null); };
+        script.src = GAS_URL + '?action=getConfig&callback=' + cb;
+        document.body.appendChild(script);
       });
     }
 
@@ -105,10 +125,16 @@
     }
 
     function main() {
-      // 教室ボタンは直書きリストから即描画（GAS問い合わせもliff.initも待たない）。
-      // 描画後にpickerを表示し、見出しとボタンを同時に出す。
-      renderButtons(CLASSROOMS);
+      // 初期値で即描画し、見出しとボタンを同時に出す
+      renderButtons(DEFAULT_CLASSROOMS);
       document.getElementById('picker').style.visibility = 'visible';
+
+      // 裏で最新の教室一覧を取得し、変わっていれば描き直す（登録操作中は触らない）
+      fetchClassroomsJsonp().then(function (latest) {
+        if (latest && !submitting && JSON.stringify(latest) !== JSON.stringify(DEFAULT_CLASSROOMS)) {
+          renderButtons(latest);
+        }
+      });
 
       // userIdは裏で並行取得。登録(タップ)時に userIdReady を待つ。
       userIdReady = (async function () {
