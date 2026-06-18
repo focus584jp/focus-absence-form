@@ -105,9 +105,12 @@
     .message { padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 15px; white-space: pre-line; }
     .message.error { background: #fdecea; color: #c62828; }
     .message.success { background: #D7ECDD; color: #1e6b3a; }
+    #formTitle { font-size: 18px; color: #143778; margin-bottom: 12px; }
   </style>
 </head>
 <body>
+  <h1 id="formTitle">欠席連絡</h1>
+
   <div id="message"></div>
 
   <form id="absenceForm" novalidate>
@@ -125,7 +128,7 @@
     </div>
 
     <div class="form-group">
-      <label for="absenceDate">欠席日 <span class="field-error" id="err-absenceDate"></span></label>
+      <label for="absenceDate"><span id="dateLabelText">欠席日</span> <span class="field-error" id="err-absenceDate"></span></label>
       <input type="date" id="absenceDate" required>
     </div>
 
@@ -160,6 +163,13 @@
 
     let userId = null;
     let classroomName = '';
+
+    // 種別（遅刻／欠席）。URLパラメータから読む。無指定や不正値は「欠席」にフォールバック（後方互換）。
+    const formType = (new URLSearchParams(location.search).get('type') === '遅刻') ? '遅刻' : '欠席';
+    // タイトル・見出し・日付ラベルを種別で出し分ける
+    document.title = formType + '連絡';
+    document.getElementById('formTitle').textContent = formType + '連絡';
+    document.getElementById('dateLabelText').textContent = formType + '日';
 
     function showMessage(text, type) {
       const el = document.getElementById('message');
@@ -287,6 +297,7 @@
 
       const payload = {
         userId: userId,
+        type: formType,
         classroom: classroomName,
         studentName: studentName,
         absenceDate: absenceDate,
