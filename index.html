@@ -151,6 +151,7 @@
     <div class="form-group">
       <label for="reason">理由 <span class="field-error" id="err-reason"></span></label>
       <textarea id="reason" rows="3" placeholder="例：発熱のため" required></textarea>
+      <script>if (window.__formType === '遅刻') document.getElementById('reason').placeholder = '例：腹痛のため';</script>
     </div>
 
     <button type="submit" class="submit-btn" id="submitBtn">送信する</button>
