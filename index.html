@@ -8,11 +8,19 @@
   <meta http-equiv="Expires" content="0">
   <title>連絡</title>
   <script>
-    // 種別・教室名をURLから即時確定。後続の各要素直後のインラインで適用し、
-    // プログレッシブ描画やキャッシュ起因のちらつきを防ぐ。
-    window.__params = new URLSearchParams(location.search);
-    window.__formType = (window.__params.get('type') === '遅刻') ? '遅刻' : '欠席';
-    window.__classroom = window.__params.get('classroom') || '';
+    // 種別・教室名をURLから即時確定。LIFF経由では1回目のロードでクエリが
+    // liff.state にくるまれて届くため、それを展開してから読む。これにより
+    // liff.init()のリダイレクト前（最初の描画）から正しい値を表示できる。
+    (function () {
+      var sp = new URLSearchParams(location.search);
+      var state = sp.get('liff.state');
+      if (state) {
+        sp = new URLSearchParams(state.charAt(0) === '?' ? state.slice(1) : state);
+      }
+      window.__params = sp;
+      window.__formType = (sp.get('type') === '遅刻') ? '遅刻' : '欠席';
+      window.__classroom = sp.get('classroom') || '';
+    })();
     document.title = window.__formType + '連絡';
   </script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
@@ -160,7 +168,7 @@
     <button type="submit" class="submit-btn" id="submitBtn">送信する</button>
   </form>
 
-  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-2</div>
+  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-3</div>
 
   <script>
     // ===== 設定（環境に合わせて変更）=====
