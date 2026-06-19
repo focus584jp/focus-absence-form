@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>欠席連絡</title>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <title>連絡</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -109,7 +109,7 @@
   </style>
 </head>
 <body>
-  <h1 id="formTitle">欠席連絡</h1>
+  <h1 id="formTitle"></h1>
 
   <div id="message"></div>
 
@@ -128,7 +128,7 @@
     </div>
 
     <div class="form-group">
-      <label for="absenceDate"><span id="dateLabelText">欠席日</span> <span class="field-error" id="err-absenceDate"></span></label>
+      <label for="absenceDate"><span id="dateLabelText"></span> <span class="field-error" id="err-absenceDate"></span></label>
       <input type="date" id="absenceDate" required>
     </div>
 
@@ -327,7 +327,8 @@
       }
     });
 
-    async function main() {
+    // liff 非依存。HTMLパース直後に即実行してフォームを描画する。
+    function initFormUI() {
       buildPeriodGrid(DEFAULT_PERIODS);
       // 裏で最新の時限定義を取得。ユーザーが選択を始めていなければ差し替える
       fetchConfigJsonp().then(function (config) {
@@ -337,7 +338,10 @@
         }
       });
       setTodayAsDefault();
+    }
 
+    // liff 依存。SDK(defer)ロード後に走らせるため DOMContentLoaded で呼ぶ。
+    async function initLiff() {
       try {
         await liff.init({ liffId: LIFF_ID });
       } catch (err) {
@@ -382,7 +386,9 @@
       document.getElementById(id).addEventListener('input', function() { clearFieldError(id); });
     });
 
-    main();
+    // liff 非依存のUIは即描画。liff 依存処理は defer の SDK ロード後（DOMContentLoaded）に。
+    initFormUI();
+    document.addEventListener('DOMContentLoaded', initLiff);
   </script>
 </body>
 </html>
