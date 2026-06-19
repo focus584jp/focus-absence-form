@@ -305,25 +305,32 @@
         reason: reason,
       };
 
+      const payloadStr = JSON.stringify(payload);
+      // GASは別オリジン＆no-corsでレスポンスを読めない。完了を待つ意味が薄いため
+      // sendBeaconで投げて即カードを閉じる（受付確認はLINEプッシュで届く）。
+      let sent = false;
       try {
-        // GASは別オリジンのためCORSでレスポンスを読めない。no-corsで送信し、
-        // 受付確認はGASからのLINEプッシュメッセージで通知される。
-        await fetch(GAS_URL + '?action=absence', {
+        if (navigator.sendBeacon) {
+          const blob = new Blob([payloadStr], { type: 'text/plain' });
+          sent = navigator.sendBeacon(GAS_URL + '?action=absence', blob);
+        }
+      } catch (e) {
+        sent = false;
+      }
+      if (!sent) {
+        // 古いWebView等のフォールバック（完了は待たない）
+        fetch(GAS_URL + '?action=absence', {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(payload),
+          body: payloadStr,
         });
-        if (liff.isInClient()) {
-          liff.closeWindow();
-        } else {
-          document.getElementById('absenceForm').style.display = 'none';
-          showMessage('送信しました。', 'success');
-        }
-      } catch (err) {
-        showMessage('送信に失敗しました: ' + err.message, 'error');
-        btn.disabled = false;
-        btn.textContent = '送信する';
+      }
+      if (liff.isInClient()) {
+        liff.closeWindow();
+      } else {
+        document.getElementById('absenceForm').style.display = 'none';
+        showMessage('送信しました。', 'success');
       }
     });
 
