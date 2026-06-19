@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>連絡</title>
+  <script>
+    // 種別・教室名をURLから即時確定。後続の各要素直後のインラインで適用し、
+    // プログレッシブ描画やキャッシュ起因のちらつきを防ぐ。
+    window.__params = new URLSearchParams(location.search);
+    window.__formType = (window.__params.get('type') === '遅刻') ? '遅刻' : '欠席';
+    window.__classroom = window.__params.get('classroom') || '';
+    document.title = window.__formType + '連絡';
+  </script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,6 +118,7 @@
 </head>
 <body>
   <h1 id="formTitle"></h1>
+  <script>document.getElementById('formTitle').textContent = window.__formType + '連絡';</script>
 
   <div id="message"></div>
 
@@ -117,6 +126,7 @@
     <div class="form-group">
       <label>教室名</label>
       <div class="classroom-display" id="classroomDisplay">-</div>
+      <script>if (window.__classroom) document.getElementById('classroomDisplay').textContent = window.__classroom;</script>
     </div>
 
     <div class="form-group">
@@ -129,6 +139,7 @@
 
     <div class="form-group">
       <label for="absenceDate"><span id="dateLabelText"></span> <span class="field-error" id="err-absenceDate"></span></label>
+      <script>document.getElementById('dateLabelText').textContent = window.__formType + '日';</script>
       <input type="date" id="absenceDate" required>
     </div>
 
@@ -164,12 +175,8 @@
     let userId = null;
     let classroomName = '';
 
-    // 種別（遅刻／欠席）。URLパラメータから読む。無指定や不正値は「欠席」にフォールバック（後方互換）。
-    const formType = (new URLSearchParams(location.search).get('type') === '遅刻') ? '遅刻' : '欠席';
-    // タイトル・見出し・日付ラベルを種別で出し分ける
-    document.title = formType + '連絡';
-    document.getElementById('formTitle').textContent = formType + '連絡';
-    document.getElementById('dateLabelText').textContent = formType + '日';
+    // 種別はheadのインラインで確定済み（window.__formType）。見出し・ラベルも各要素直後で適用済み。
+    const formType = window.__formType;
 
     function showMessage(text, type) {
       const el = document.getElementById('message');
@@ -382,12 +389,8 @@
       }
     }
 
-    // URLパラメータに教室名があれば、liff.init()を待たず即時表示する
-    // （リッチメニュー経由はURLに教室名が入るため遅延なく入力される）
-    classroomName = new URLSearchParams(location.search).get('classroom') || '';
-    if (classroomName) {
-      document.getElementById('classroomDisplay').textContent = classroomName;
-    }
+    // 教室名はclassroomDisplay直後のインラインで即時表示済み（window.__classroom）。
+    classroomName = window.__classroom;
 
     ['lastName', 'firstName', 'absenceDate', 'reason'].forEach(function(id) {
       document.getElementById(id).addEventListener('input', function() { clearFieldError(id); });
