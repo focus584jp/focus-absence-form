@@ -33,6 +33,9 @@
       color: #333333;
       appearance: none;
     }
+    /* 未入力エラー時の赤枠（姓名 input／教室トリガー共通） */
+    .name-grid input.input-error,
+    .dd-trigger.input-error { border-color: #c62828; background: #fff7f7; }
     /* 教室のカスタムドロップダウン（スクロールが伝わるピーク＋フェード） */
     .dropdown { position: relative; }
     .dd-trigger {
@@ -243,15 +246,30 @@
 
     async function register() {
       if (submitting) return;
-      const lastName = document.getElementById('lastName').value.trim();
-      const firstName = document.getElementById('firstName').value.trim();
+      const lnEl = document.getElementById('lastName');
+      const fnEl = document.getElementById('firstName');
+      const lastName = lnEl.value.trim();
+      const firstName = fnEl.value.trim();
       const classroom = document.getElementById('classroomSelect').value;
 
       let bad = false;
-      if (!lastName || !firstName) { document.getElementById('nameErr').textContent = '※姓・名を入力してください'; bad = true; }
-      else { document.getElementById('nameErr').textContent = ''; }
-      if (!classroom) { document.getElementById('roomErr').textContent = '※教室を選択してください'; bad = true; }
-      else { document.getElementById('roomErr').textContent = ''; }
+
+      // 姓・名：未入力の欄を赤くし、どちらが欠けているかでメッセージを変える
+      lnEl.classList.toggle('input-error', !lastName);
+      fnEl.classList.toggle('input-error', !firstName);
+      let nameMsg = '';
+      if (!lastName && !firstName) nameMsg = '※姓・名を入力してください';
+      else if (!lastName) nameMsg = '※姓を入力してください';
+      else if (!firstName) nameMsg = '※名を入力してください';
+      document.getElementById('nameErr').textContent = nameMsg;
+      if (nameMsg) bad = true;
+
+      // 教室：未選択ならトリガーを赤くしてメッセージ表示
+      const trigger = document.getElementById('ddTrigger');
+      trigger.classList.toggle('input-error', !classroom);
+      document.getElementById('roomErr').textContent = classroom ? '' : '※教室を選択してください';
+      if (!classroom) bad = true;
+
       if (bad) return;
 
       submitting = true;
@@ -310,6 +328,27 @@
         if (!document.getElementById('dropdown').contains(e.target)) closeDropdown();
       });
       document.getElementById('ddList').addEventListener('scroll', updateFade);
+
+      // 一度エラー表示された後だけ、入力に合わせて赤枠とメッセージを更新する
+      ['lastName', 'firstName'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', function () {
+          const lnEl = document.getElementById('lastName');
+          const fnEl = document.getElementById('firstName');
+          const alreadyShown = lnEl.classList.contains('input-error')
+            || fnEl.classList.contains('input-error')
+            || document.getElementById('nameErr').textContent;
+          if (!alreadyShown) return;
+          const lnBad = !lnEl.value.trim();
+          const fnBad = !fnEl.value.trim();
+          lnEl.classList.toggle('input-error', lnBad);
+          fnEl.classList.toggle('input-error', fnBad);
+          let msg = '';
+          if (lnBad && fnBad) msg = '※姓・名を入力してください';
+          else if (lnBad) msg = '※姓を入力してください';
+          else if (fnBad) msg = '※名を入力してください';
+          document.getElementById('nameErr').textContent = msg;
+        });
+      });
 
       // userIdは裏で並行取得。登録時に userIdReady を待つ。
       userIdReady = (async function () {
