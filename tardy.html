@@ -6,11 +6,11 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>欠席連絡</title>
+  <title>遅刻連絡</title>
   <script>
-    // この画面は「欠席」専用。種別は見出し等にハードコード済み。
-    window.__formType = '欠席';
-    window.__liffId = '2010272855-O3sIeywy'; // 欠席用LIFF ID
+    // この画面は「遅刻」専用。種別は見出し等にハードコード済み。
+    window.__formType = '遅刻';
+    window.__liffId = 'TARDY_LIFF_ID'; // ★遅刻用LIFF ID（LINE Developersで作成後に差し替える）
   </script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
   <script src="app.js" defer></script>
@@ -118,7 +118,7 @@
   </style>
 </head>
 <body>
-  <h1 id="formTitle">欠席連絡</h1>
+  <h1 id="formTitle">遅刻連絡</h1>
 
   <div id="message"></div>
 
@@ -138,7 +138,7 @@
     </div>
 
     <div class="form-group">
-      <label for="absenceDate"><span id="dateLabelText">欠席日</span> <span class="field-error" id="err-absenceDate"></span></label>
+      <label for="absenceDate"><span id="dateLabelText">遅刻日</span> <span class="field-error" id="err-absenceDate"></span></label>
       <input type="date" id="absenceDate" required>
     </div>
 
@@ -149,12 +149,12 @@
 
     <div class="form-group">
       <label for="reason">理由 <span class="field-error" id="err-reason"></span></label>
-      <textarea id="reason" rows="3" placeholder="例：発熱のため" required></textarea>
+      <textarea id="reason" rows="3" placeholder="例：腹痛のため" required></textarea>
     </div>
 
     <button type="submit" class="submit-btn" id="submitBtn">送信する</button>
   </form>
 
-  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-4</div>
+  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-4 (遅刻)</div>
 </body>
 </html>
