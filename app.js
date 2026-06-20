@@ -78,8 +78,8 @@
     });
   }
 
-  // GASからuserIdで教室名を取得（JSONP。別オリジンのためscriptタグで読む）
-  function fetchClassroom(uid) {
+  // GASからuserIdで登録情報（教室・姓・名）を取得（JSONP。別オリジンのためscriptタグで読む）
+  function fetchUserInfo(uid) {
     return new Promise(function (resolve) {
       const cb = 'jsonp_' + Date.now();
       const script = document.createElement('script');
@@ -89,10 +89,7 @@
         delete window[cb];
         if (script.parentNode) script.parentNode.removeChild(script);
       }
-      window[cb] = function (data) {
-        cleanup();
-        resolve(data && data.classroom ? data.classroom : null);
-      };
+      window[cb] = function (data) { cleanup(); resolve(data || null); };
       script.onerror = function () { cleanup(); resolve(null); };
       script.src = GAS_URL + '?action=getClassroom&userId=' + encodeURIComponent(uid) + '&callback=' + cb;
       document.body.appendChild(script);
@@ -161,10 +158,14 @@
       type: formType,
       classroom: classroomName,
       studentName: studentName,
+      lastName: lastName,
+      firstName: firstName,
       absenceDate: absenceDate,
       periods: periods,
       reason: reason,
     };
+    // 次回プリフィル用に端末へ保存（サーバー側はGASのsaveUserNameが更新）
+    try { localStorage.setItem('lastName', lastName); localStorage.setItem('firstName', firstName); } catch (e) {}
 
     const payloadStr = JSON.stringify(payload);
     // GASは別オリジン＆no-corsでレスポンスを読めない。完了を待つ意味が薄いため
@@ -232,8 +233,9 @@
       return;
     }
 
-    // 教室名をGASから取得。取れたら表示と端末キャッシュを更新する。
-    const fetched = await fetchClassroom(userId) || '';
+    // 登録情報（教室・姓・名）をGASから取得して補完する。
+    const info = await fetchUserInfo(userId) || {};
+    const fetched = info.classroom || '';
     if (fetched) {
       classroomName = fetched;
       document.getElementById('classroomDisplay').textContent = fetched;
@@ -242,6 +244,11 @@
       document.getElementById('classroomDisplay').textContent = '未登録';
       showMessage('教室が未登録です。LINEのメニューから教室登録を行ってください。', 'error');
     }
+    // 姓・名は入力欄が空のときだけ補完（localStorageで既に入っていれば尊重）
+    const lnEl = document.getElementById('lastName');
+    const fnEl = document.getElementById('firstName');
+    if (info.lastName && !lnEl.value) lnEl.value = info.lastName;
+    if (info.firstName && !fnEl.value) fnEl.value = info.firstName;
   }
 
   // 起動：教室名は端末キャッシュ（前回値）で即時表示済み（HTMLの要素直後インライン）。
