@@ -31,12 +31,24 @@
     }
     .room-btn:active { background: #DDE7F7; border-color: #143778; }
     .room-btn:disabled { opacity: .5; }
+    .name-box { background:#fff; border-radius:8px; padding:14px; margin-bottom:14px; }
+    .name-box label { display:block; font-size:15px; font-weight:bold; color:#222; margin-bottom:8px; }
+    .name-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .name-grid input { width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:16px; background:#fff; color:#333; appearance:none; }
+    .name-err { color:#c62828; font-size:13px; font-weight:bold; margin-left:6px; }
   </style>
 </head>
 <body>
   <div id="message"></div>
   <div id="picker">
-    <h1>在籍している教室を選択してください</h1>
+    <div class="name-box">
+      <label>お子さまのお名前 <span class="name-err" id="nameErr"></span></label>
+      <div class="name-grid">
+        <input type="text" id="lastName" placeholder="姓：山田">
+        <input type="text" id="firstName" placeholder="名：太郎">
+      </div>
+    </div>
+    <h1 style="font-size:16px;">在籍している教室を選択してください</h1>
     <div class="grid" id="grid"></div>
   </div>
 
@@ -93,6 +105,14 @@
 
     async function register(classroom, btn) {
       if (submitting) return;
+      const lastName = document.getElementById('lastName').value.trim();
+      const firstName = document.getElementById('firstName').value.trim();
+      if (!lastName || !firstName) {
+        document.getElementById('nameErr').textContent = '※姓・名を入力してください';
+        document.getElementById('lastName').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      document.getElementById('nameErr').textContent = '';
       submitting = true;
       Array.prototype.forEach.call(document.querySelectorAll('.room-btn'), function (b) { b.disabled = true; });
       btn.textContent = classroom + '（登録中…）';
@@ -103,13 +123,15 @@
         if (!userId) {
           throw new Error('ユーザー情報を取得できませんでした。一度閉じて開き直してください。');
         }
+        // 次回フォームの即時プリフィル用に端末へ保存
+        try { localStorage.setItem('lastName', lastName); localStorage.setItem('firstName', firstName); } catch (e) {}
         // GASは別オリジンのためCORSでレスポンスを読めない。no-corsで送信し、
         // 確認はGASからのLINEプッシュメッセージで通知される。
         await fetch(GAS_URL + '?action=register_classroom', {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ userId: userId, classroom: classroom }),
+          body: JSON.stringify({ userId: userId, classroom: classroom, lastName: lastName, firstName: firstName }),
         });
         if (liff.isInClient()) {
           liff.closeWindow();
