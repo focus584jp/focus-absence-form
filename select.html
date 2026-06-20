@@ -34,6 +34,7 @@
     }
     .name-grid input { appearance: none; }
     .err { color: #c62828; font-size: 13px; font-weight: bold; margin-left: 6px; }
+    .note { font-size: 12px; color: #888; line-height: 1.5; margin-bottom: 10px; }
     .submit-btn {
       width: 100%;
       padding: 16px;
@@ -53,6 +54,7 @@
   <div id="picker">
     <div class="box">
       <label>お子さまのお名前 <span class="err" id="nameErr"></span></label>
+      <p class="note">※ご兄弟は、どちらか一人を登録してください。連絡時にお名前を変更できます。</p>
       <div class="name-grid">
         <input type="text" id="lastName" placeholder="姓：山田">
         <input type="text" id="firstName" placeholder="名：太郎">
