@@ -62,6 +62,15 @@
       item.addEventListener('click', function (e) {
         const cb = this.querySelector('input');
         if (e.target !== cb) cb.checked = !cb.checked;
+        // 遅刻は時限を1つだけ選択（チェック時に他を解除）。欠席は複数選択のまま。
+        if (window.__formType === '遅刻' && cb.checked) {
+          document.querySelectorAll('#periodGrid input').forEach(function (other) {
+            if (other !== cb) other.checked = false;
+          });
+          document.querySelectorAll('#periodGrid .period-item').forEach(function (it) {
+            it.classList.remove('selected');
+          });
+        }
         this.classList.toggle('selected', cb.checked);
         clearFieldError('periodGrid');
       });

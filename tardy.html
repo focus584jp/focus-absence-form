@@ -18,7 +18,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-      background: #F2F4F7;
+      background: #FDF5EA; /* 遅刻＝ごく薄いオレンジ */
       padding: 16px;
       color: #333333;
     }
@@ -131,8 +131,6 @@
   </style>
 </head>
 <body>
-  <h1 id="formTitle">遅刻連絡</h1>
-
   <div id="message"></div>
 
   <form id="absenceForm" novalidate>
@@ -156,7 +154,7 @@
     </div>
 
     <div class="form-group">
-      <label>時限（複数選択可） <span class="field-error" id="err-periodGrid"></span></label>
+      <label>時限 <span class="field-error" id="err-periodGrid"></span></label>
       <div class="period-grid" id="periodGrid"></div>
     </div>
 
@@ -166,11 +164,11 @@
     </div>
 
     <button type="submit" class="submit-btn" id="submitBtn">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       送信する
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
     </button>
   </form>
 
-  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-7 (遅刻)</div>
+  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-8 (遅刻)</div>
 </body>
 </html>

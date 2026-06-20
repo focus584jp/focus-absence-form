@@ -18,7 +18,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-      background: #F2F4F7;
+      background: #FBF1EF; /* 欠席＝ごく薄い赤 */
       padding: 16px;
       color: #333333;
     }
@@ -131,8 +131,6 @@
   </style>
 </head>
 <body>
-  <h1 id="formTitle">欠席連絡</h1>
-
   <div id="message"></div>
 
   <form id="absenceForm" novalidate>
@@ -166,11 +164,11 @@
     </div>
 
     <button type="submit" class="submit-btn" id="submitBtn">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       送信する
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
     </button>
   </form>
 
-  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-7</div>
+  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-8</div>
 </body>
 </html>
