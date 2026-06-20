@@ -33,13 +33,13 @@
       color: #333333;
       appearance: none;
     }
-    /* 教室のカスタムドロップダウン（約5件分の高さでスクロール） */
+    /* 教室のカスタムドロップダウン（スクロールが伝わるピーク＋フェード） */
     .dropdown { position: relative; }
     .dd-trigger {
       width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
+      padding: 13px 14px;
+      border: 1px solid #d7dce6;
+      border-radius: 10px;
       font-size: 16px;
       background: #fff;
       color: #333333;
@@ -48,36 +48,63 @@
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
     }
+    .dropdown.open .dd-trigger { border-color: #143778; box-shadow: 0 0 0 3px rgba(20, 55, 120, 0.12); }
     .dd-trigger .dd-placeholder { color: #999; }
-    .dd-caret { color: #888; transition: transform .15s; }
+    .dd-caret { color: #8a93a6; font-size: 12px; transition: transform .18s; }
     .dropdown.open .dd-caret { transform: rotate(180deg); }
-    .dd-list {
+    /* ポップ本体（角丸でクリップし、内側にリストとフェードを重ねる） */
+    .dd-pop {
       display: none;
-      list-style: none;
       position: absolute;
       left: 0;
       right: 0;
-      top: calc(100% + 4px);
+      top: calc(100% + 6px);
       background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 6px;
+      border: 1px solid #e2e6ee;
+      border-radius: 12px;
       z-index: 10;
-      max-height: 232px; /* 約5件分 */
+      overflow: hidden;
+      box-shadow: 0 10px 28px rgba(20, 55, 120, 0.16);
+    }
+    .dropdown.open .dd-pop { display: block; }
+    .dd-list {
+      list-style: none;
+      max-height: 214px; /* 最後の1件を半分覗かせてスクロールを示唆 */
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      overscroll-behavior: contain;
     }
-    .dropdown.open .dd-list { display: block; }
+    .dd-list::-webkit-scrollbar { width: 6px; }
+    .dd-list::-webkit-scrollbar-track { background: transparent; }
+    .dd-list::-webkit-scrollbar-thumb { background: #c4cfe0; border-radius: 3px; }
     .dd-list li {
-      padding: 13px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
       font-size: 16px;
       color: #333333;
       cursor: pointer;
-      border-bottom: 1px solid #f0f0f0;
+      transition: background .12s;
     }
-    .dd-list li:last-child { border-bottom: none; }
-    .dd-list li.selected { background: #E3ECF8; font-weight: bold; }
+    .dd-list li + li { border-top: 1px solid #f2f4f7; }
+    .dd-list li:active { background: #f5f8fd; }
+    .dd-list li.selected { color: #143778; font-weight: bold; }
+    .dd-list li.selected::after { content: '✓'; color: #143778; font-weight: bold; }
+    /* 下端フェード（スクロール余地があるときだけ表示してスクロールを示唆） */
+    .dd-fade {
+      pointer-events: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 30px;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #ffffff);
+      transition: opacity .15s;
+    }
+    .dd-fade.hidden { opacity: 0; }
     .err { color: #c62828; font-size: 13px; font-weight: bold; margin-left: 6px; }
     .note { font-size: 12px; color: #888; line-height: 1.5; margin-bottom: 10px; }
     .submit-btn {
@@ -112,7 +139,10 @@
           <span id="ddLabel" class="dd-placeholder">選択してください</span>
           <span class="dd-caret">▾</span>
         </button>
-        <ul class="dd-list" id="ddList" role="listbox"></ul>
+        <div class="dd-pop">
+          <ul class="dd-list" id="ddList" role="listbox"></ul>
+          <div class="dd-fade" id="ddFade"></div>
+        </div>
       </div>
       <input type="hidden" id="classroomSelect" value="">
     </div>
@@ -167,9 +197,19 @@
       closeDropdown();
     }
 
+    // スクロール余地があるときだけ下端フェードを出す（スクロール可能の示唆）
+    function updateFade() {
+      const list = document.getElementById('ddList');
+      const fade = document.getElementById('ddFade');
+      const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 4;
+      const noScroll = list.scrollHeight <= list.clientHeight + 1;
+      fade.classList.toggle('hidden', atBottom || noScroll);
+    }
+
     function openDropdown() {
       document.getElementById('dropdown').classList.add('open');
       document.getElementById('ddTrigger').setAttribute('aria-expanded', 'true');
+      requestAnimationFrame(updateFade);
     }
     function closeDropdown() {
       document.getElementById('dropdown').classList.remove('open');
@@ -269,6 +309,7 @@
       document.addEventListener('click', function (e) {
         if (!document.getElementById('dropdown').contains(e.target)) closeDropdown();
       });
+      document.getElementById('ddList').addEventListener('scroll', updateFade);
 
       // userIdは裏で並行取得。登録時に userIdReady を待つ。
       userIdReady = (async function () {
