@@ -23,7 +23,7 @@
     .box { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
     .box label { display: block; font-size: 17px; font-weight: bold; color: #222; margin-bottom: 8px; }
     .name-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .name-grid input, #classroomSelect {
+    .name-grid input {
       width: 100%;
       padding: 12px;
       border: 1px solid #ddd;
@@ -31,8 +31,53 @@
       font-size: 16px;
       background: #fff;
       color: #333333;
+      appearance: none;
     }
-    .name-grid input { appearance: none; }
+    /* 教室のカスタムドロップダウン（約5件分の高さでスクロール） */
+    .dropdown { position: relative; }
+    .dd-trigger {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      background: #fff;
+      color: #333333;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .dd-trigger .dd-placeholder { color: #999; }
+    .dd-caret { color: #888; transition: transform .15s; }
+    .dropdown.open .dd-caret { transform: rotate(180deg); }
+    .dd-list {
+      display: none;
+      list-style: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 4px);
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      z-index: 10;
+      max-height: 232px; /* 約5件分 */
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    .dropdown.open .dd-list { display: block; }
+    .dd-list li {
+      padding: 13px 14px;
+      font-size: 16px;
+      color: #333333;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .dd-list li:last-child { border-bottom: none; }
+    .dd-list li.selected { background: #E3ECF8; font-weight: bold; }
     .err { color: #c62828; font-size: 13px; font-weight: bold; margin-left: 6px; }
     .note { font-size: 12px; color: #888; line-height: 1.5; margin-bottom: 10px; }
     .submit-btn {
@@ -62,7 +107,14 @@
     </div>
     <div class="box">
       <label>在籍教室 <span class="err" id="roomErr"></span></label>
-      <select id="classroomSelect"><option value="">選択してください</option></select>
+      <div class="dropdown" id="dropdown">
+        <button type="button" class="dd-trigger" id="ddTrigger" aria-haspopup="listbox" aria-expanded="false">
+          <span id="ddLabel" class="dd-placeholder">選択してください</span>
+          <span class="dd-caret">▾</span>
+        </button>
+        <ul class="dd-list" id="ddList" role="listbox"></ul>
+      </div>
+      <input type="hidden" id="classroomSelect" value="">
     </div>
     <button class="submit-btn" id="registerBtn">登録する</button>
   </div>
@@ -85,18 +137,47 @@
       el.textContent = text;
     }
 
-    // 教室一覧をプルダウンに描画（既存の選択は保持）
+    let selectedClassroom = '';
+
+    // 教室一覧をカスタムドロップダウンに描画（既存の選択は保持）
     function renderOptions(classrooms) {
-      const sel = document.getElementById('classroomSelect');
-      const cur = sel.value;
-      sel.innerHTML = '<option value="">選択してください</option>';
+      const list = document.getElementById('ddList');
+      list.innerHTML = '';
       classrooms.forEach(function (name) {
-        const o = document.createElement('option');
-        o.value = name;
-        o.textContent = name;
-        sel.appendChild(o);
+        const li = document.createElement('li');
+        li.textContent = name;
+        li.dataset.value = name;
+        li.setAttribute('role', 'option');
+        if (name === selectedClassroom) li.classList.add('selected');
+        li.addEventListener('click', function () { selectClassroom(name); });
+        list.appendChild(li);
       });
-      if (cur) sel.value = cur;
+    }
+
+    function selectClassroom(name) {
+      selectedClassroom = name;
+      document.getElementById('classroomSelect').value = name;
+      const lbl = document.getElementById('ddLabel');
+      lbl.textContent = name;
+      lbl.classList.remove('dd-placeholder');
+      document.getElementById('roomErr').textContent = '';
+      Array.prototype.forEach.call(document.querySelectorAll('#ddList li'), function (li) {
+        li.classList.toggle('selected', li.dataset.value === name);
+      });
+      closeDropdown();
+    }
+
+    function openDropdown() {
+      document.getElementById('dropdown').classList.add('open');
+      document.getElementById('ddTrigger').setAttribute('aria-expanded', 'true');
+    }
+    function closeDropdown() {
+      document.getElementById('dropdown').classList.remove('open');
+      document.getElementById('ddTrigger').setAttribute('aria-expanded', 'false');
+    }
+    function toggleDropdown() {
+      if (document.getElementById('dropdown').classList.contains('open')) closeDropdown();
+      else openDropdown();
     }
 
     // GASから教室一覧を取得（JSONP。別オリジンのためscriptタグで読む）
@@ -179,6 +260,15 @@
       });
 
       document.getElementById('registerBtn').addEventListener('click', register);
+
+      // カスタムドロップダウンの開閉（外側タップで閉じる）
+      document.getElementById('ddTrigger').addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleDropdown();
+      });
+      document.addEventListener('click', function (e) {
+        if (!document.getElementById('dropdown').contains(e.target)) closeDropdown();
+      });
 
       // userIdは裏で並行取得。登録時に userIdReady を待つ。
       userIdReady = (async function () {
