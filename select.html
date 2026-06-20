@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>教室を選択</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>お名前・所属教室の登録</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,43 +16,53 @@
       padding: 16px;
       color: #333333;
     }
-    h1 { font-size: 18px; color: #143778; margin-bottom: 16px; }
     .message { padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 15px; white-space: pre-line; }
     .message.error { background: #fdecea; color: #c62828; }
-    /* 見出しとボタンを同時に表示するため、ボタン描画までは隠しておく */
+    /* 一式そろってから表示する */
     #picker { visibility: hidden; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .room-btn {
-      padding: 16px 8px;
-      background: #fff;
+    .box { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .box label { display: block; font-size: 17px; font-weight: bold; color: #222; margin-bottom: 8px; }
+    .name-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .name-grid input, #classroomSelect {
+      width: 100%;
+      padding: 12px;
       border: 1px solid #ddd;
-      border-radius: 8px;
+      border-radius: 6px;
       font-size: 16px;
-      color: #555555;
+      background: #fff;
+      color: #333333;
+    }
+    .name-grid input { appearance: none; }
+    .err { color: #c62828; font-size: 13px; font-weight: bold; margin-left: 6px; }
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: #143778;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
       font-weight: bold;
       cursor: pointer;
     }
-    .room-btn:active { background: #DDE7F7; border-color: #143778; }
-    .room-btn:disabled { opacity: .5; }
-    .name-box { background:#fff; border-radius:8px; padding:14px; margin-bottom:14px; }
-    .name-box label { display:block; font-size:15px; font-weight:bold; color:#222; margin-bottom:8px; }
-    .name-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .name-grid input { width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:16px; background:#fff; color:#333; appearance:none; }
-    .name-err { color:#c62828; font-size:13px; font-weight:bold; margin-left:6px; }
+    .submit-btn:disabled { background: #aaa; }
   </style>
 </head>
 <body>
   <div id="message"></div>
   <div id="picker">
-    <div class="name-box">
-      <label>お子さまのお名前 <span class="name-err" id="nameErr"></span></label>
+    <div class="box">
+      <label>お子さまのお名前 <span class="err" id="nameErr"></span></label>
       <div class="name-grid">
         <input type="text" id="lastName" placeholder="姓：山田">
         <input type="text" id="firstName" placeholder="名：太郎">
       </div>
     </div>
-    <h1 style="font-size:16px;">在籍している教室を選択してください</h1>
-    <div class="grid" id="grid"></div>
+    <div class="box">
+      <label>在籍教室 <span class="err" id="roomErr"></span></label>
+      <select id="classroomSelect"><option value="">選択してください</option></select>
+    </div>
+    <button class="submit-btn" id="registerBtn">登録する</button>
   </div>
 
   <script>
@@ -70,16 +83,18 @@
       el.textContent = text;
     }
 
-    function renderButtons(classrooms) {
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
+    // 教室一覧をプルダウンに描画（既存の選択は保持）
+    function renderOptions(classrooms) {
+      const sel = document.getElementById('classroomSelect');
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">選択してください</option>';
       classrooms.forEach(function (name) {
-        const btn = document.createElement('button');
-        btn.className = 'room-btn';
-        btn.textContent = name;
-        btn.addEventListener('click', function () { register(name, btn); });
-        grid.appendChild(btn);
+        const o = document.createElement('option');
+        o.value = name;
+        o.textContent = name;
+        sel.appendChild(o);
       });
+      if (cur) sel.value = cur;
     }
 
     // GASから教室一覧を取得（JSONP。別オリジンのためscriptタグで読む）
@@ -103,22 +118,25 @@
       });
     }
 
-    async function register(classroom, btn) {
+    async function register() {
       if (submitting) return;
       const lastName = document.getElementById('lastName').value.trim();
       const firstName = document.getElementById('firstName').value.trim();
-      if (!lastName || !firstName) {
-        document.getElementById('nameErr').textContent = '※姓・名を入力してください';
-        document.getElementById('lastName').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-      }
-      document.getElementById('nameErr').textContent = '';
+      const classroom = document.getElementById('classroomSelect').value;
+
+      let bad = false;
+      if (!lastName || !firstName) { document.getElementById('nameErr').textContent = '※姓・名を入力してください'; bad = true; }
+      else { document.getElementById('nameErr').textContent = ''; }
+      if (!classroom) { document.getElementById('roomErr').textContent = '※教室を選択してください'; bad = true; }
+      else { document.getElementById('roomErr').textContent = ''; }
+      if (bad) return;
+
       submitting = true;
-      Array.prototype.forEach.call(document.querySelectorAll('.room-btn'), function (b) { b.disabled = true; });
-      btn.textContent = classroom + '（登録中…）';
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.textContent = '登録中…';
 
       try {
-        // userIdは裏で取得中。まだなら待ってから送信する。
         await userIdReady;
         if (!userId) {
           throw new Error('ユーザー情報を取得できませんでした。一度閉じて開き直してください。');
@@ -141,24 +159,26 @@
       } catch (err) {
         showMessage('登録に失敗しました: ' + err.message, 'error');
         submitting = false;
-        Array.prototype.forEach.call(document.querySelectorAll('.room-btn'), function (b) { b.disabled = false; });
-        btn.textContent = classroom;
+        btn.disabled = false;
+        btn.textContent = '登録する';
       }
     }
 
     function main() {
-      // 初期値で即描画し、見出しとボタンを同時に出す
-      renderButtons(DEFAULT_CLASSROOMS);
+      // 初期値で即描画
+      renderOptions(DEFAULT_CLASSROOMS);
       document.getElementById('picker').style.visibility = 'visible';
 
       // 裏で最新の教室一覧を取得し、変わっていれば描き直す（登録操作中は触らない）
       fetchClassroomsJsonp().then(function (latest) {
         if (latest && !submitting && JSON.stringify(latest) !== JSON.stringify(DEFAULT_CLASSROOMS)) {
-          renderButtons(latest);
+          renderOptions(latest);
         }
       });
 
-      // userIdは裏で並行取得。登録(タップ)時に userIdReady を待つ。
+      document.getElementById('registerBtn').addEventListener('click', register);
+
+      // userIdは裏で並行取得。登録時に userIdReady を待つ。
       userIdReady = (async function () {
         try {
           await liff.init({ liffId: LIFF_ID });
