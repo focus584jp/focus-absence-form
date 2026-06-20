@@ -18,7 +18,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-      background: #FCEEDB; /* 遅刻＝薄オレンジ（リッチメニューのオレンジに対応） */
+      background: #F2F4F7;
       padding: 16px;
       color: #333333;
     }
@@ -109,12 +109,25 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     .submit-btn:disabled { background: #aaa; }
     .message { padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 15px; white-space: pre-line; }
     .message.error { background: #fdecea; color: #c62828; }
     .message.success { background: #D7ECDD; color: #1e6b3a; }
-    #formTitle { font-size: 18px; color: #143778; margin-bottom: 12px; }
+    #formTitle {
+      display: inline-block;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      background: #E8911E; /* 遅刻＝オレンジバッジ */
+      padding: 8px 18px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
   </style>
 </head>
 <body>
@@ -152,9 +165,12 @@
       <textarea id="reason" rows="3" placeholder="例：腹痛のため" required></textarea>
     </div>
 
-    <button type="submit" class="submit-btn" id="submitBtn">送信する</button>
+    <button type="submit" class="submit-btn" id="submitBtn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      送信する
+    </button>
   </form>
 
-  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-6 (遅刻)</div>
+  <div style="text-align:center;color:#bbb;font-size:11px;margin-top:10px;">ビルド: 0620-7 (遅刻)</div>
 </body>
 </html>
