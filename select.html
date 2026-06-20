@@ -55,7 +55,7 @@
     }
     .dropdown.open .dd-trigger { border-color: #143778; box-shadow: 0 0 0 3px rgba(20, 55, 120, 0.12); }
     .dd-trigger .dd-placeholder { color: #999; }
-    .dd-caret { color: #8a93a6; font-size: 12px; transition: transform .18s; }
+    .dd-caret { color: #143778; font-size: 18px; line-height: 1; transition: transform .18s; }
     .dropdown.open .dd-caret { transform: rotate(180deg); }
     /* ポップ本体（角丸でクリップし、内側にリストとフェードを重ねる） */
     .dd-pop {
@@ -79,9 +79,10 @@
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
     }
-    .dd-list::-webkit-scrollbar { width: 6px; }
-    .dd-list::-webkit-scrollbar-track { background: transparent; }
-    .dd-list::-webkit-scrollbar-thumb { background: #c4cfe0; border-radius: 3px; }
+    .dd-list::-webkit-scrollbar { width: 8px; }
+    .dd-list::-webkit-scrollbar-track { background: #eef1f6; border-radius: 4px; }
+    .dd-list::-webkit-scrollbar-thumb { background: #9fb2d6; border-radius: 4px; min-height: 36px; }
+    .dd-list::-webkit-scrollbar-thumb:active { background: #143778; }
     .dd-list li {
       display: flex;
       align-items: center;
@@ -94,8 +95,8 @@
     }
     .dd-list li + li { border-top: 1px solid #f2f4f7; }
     .dd-list li:active { background: #f5f8fd; }
-    .dd-list li.selected { color: #143778; font-weight: bold; }
-    .dd-list li.selected::after { content: '✓'; color: #143778; font-weight: bold; }
+    .dd-list li.selected { background: #143778; color: #fff; font-weight: bold; }
+    .dd-list li.selected::after { content: '✓'; color: #fff; font-weight: bold; font-size: 18px; }
     /* 下端フェード（スクロール余地があるときだけ表示してスクロールを示唆） */
     .dd-fade {
       pointer-events: none;
@@ -103,9 +104,27 @@
       left: 0;
       right: 0;
       bottom: 0;
-      height: 30px;
-      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #ffffff);
+      height: 38px;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #ffffff 70%);
       transition: opacity .15s;
+    }
+    /* 「まだ下がある＝スクロールできる」を伝える弾むシェブロン */
+    .dd-fade::after {
+      content: '⌄';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 1px;
+      text-align: center;
+      color: #143778;
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 1;
+      animation: ddBounce 1.2s ease-in-out infinite;
+    }
+    @keyframes ddBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(3px); }
     }
     .dd-fade.hidden { opacity: 0; }
     .err { color: #c62828; font-size: 13px; font-weight: bold; margin-left: 6px; }
