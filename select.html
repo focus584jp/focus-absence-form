@@ -302,8 +302,12 @@
         if (!userId) {
           throw new Error('ユーザー情報を取得できませんでした。一度閉じて開き直してください。');
         }
-        // 次回フォームの即時プリフィル用に端末へ保存
-        try { localStorage.setItem('lastName', lastName); localStorage.setItem('firstName', firstName); } catch (e) {}
+        // 次回フォームの即時プリフィル用に端末へ保存（教室名も保存し、初回フォーム表示から即時化）
+        try {
+          localStorage.setItem('lastName', lastName);
+          localStorage.setItem('firstName', firstName);
+          localStorage.setItem('lastClassroom', classroom);
+        } catch (e) {}
         // GASは別オリジンのためCORSでレスポンスを読めない。no-corsで送信し、
         // 確認はGASからのLINEプッシュメッセージで通知される。
         await fetch(GAS_URL + '?action=register_classroom', {
