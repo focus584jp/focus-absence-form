@@ -212,6 +212,7 @@
       const lbl = document.getElementById('ddLabel');
       lbl.textContent = name;
       lbl.classList.remove('dd-placeholder');
+      document.getElementById('ddTrigger').classList.remove('input-error');
       document.getElementById('roomErr').textContent = '';
       Array.prototype.forEach.call(document.querySelectorAll('#ddList li'), function (li) {
         li.classList.toggle('selected', li.dataset.value === name);
