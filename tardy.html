@@ -19,33 +19,38 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       background: #FEFCEC; /* 遅刻＝ごく薄い黄色 */
-      padding: 16px;
+      padding: 10px;
       color: #333333;
     }
-    .classroom-display {
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: #eeeeee;
-      color: #333333;
-      font-size: 16px;
+    /* 教室名は上部のコンパクトなヘッダーに（カードを1つ削減して縦を詰める） */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 15px;
+      font-weight: bold;
+      color: #333;
+      background: rgba(255, 255, 255, 0.75);
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
     }
     .form-group {
       background: white;
       border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 12px;
+      padding: 11px 12px;
+      margin-bottom: 8px;
     }
     label {
       display: block;
-      font-size: 17px;
+      font-size: 14px;
       color: #222;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
       font-weight: bold;
     }
     input[type="text"], input[type="date"], textarea {
       width: 100%;
-      padding: 12px;
+      padding: 9px 10px;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 16px;
@@ -79,8 +84,8 @@
     .period-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px;
+      gap: 6px;
+      padding: 7px 8px;
       border: 1px solid #ddd;
       border-radius: 6px;
       cursor: pointer;
@@ -100,7 +105,7 @@
     .period-time { font-size: 12px; color: #888; }
     .submit-btn {
       width: 100%;
-      padding: 16px;
+      padding: 13px;
       background: #E67832;
       color: white;
       border: none;
@@ -108,7 +113,7 @@
       font-size: 18px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 8px;
+      margin-top: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -133,13 +138,10 @@
 <body>
   <div id="message"></div>
 
-  <form id="absenceForm" novalidate>
-    <div class="form-group">
-      <label>教室名</label>
-      <div class="classroom-display" id="classroomDisplay">-</div>
-      <script>try{var c=localStorage.getItem('lastClassroom');if(c)document.getElementById('classroomDisplay').textContent=c;}catch(e){}</script>
-    </div>
+  <div class="topbar">🏫 教室：<span id="classroomDisplay">-</span></div>
+  <script>try{var c=localStorage.getItem('lastClassroom');if(c)document.getElementById('classroomDisplay').textContent=c;}catch(e){}</script>
 
+  <form id="absenceForm" novalidate>
     <div class="form-group">
       <label>生徒名 <span class="field-error" id="err-lastName"></span><span class="field-error" id="err-firstName"></span></label>
       <div class="name-grid">
@@ -161,7 +163,7 @@
 
     <div class="form-group">
       <label for="reason">理由 <span class="field-error" id="err-reason"></span></label>
-      <textarea id="reason" rows="3" placeholder="例：腹痛のため" required></textarea>
+      <textarea id="reason" rows="2" placeholder="例：腹痛のため" required></textarea>
     </div>
 
     <button type="submit" class="submit-btn" id="submitBtn">
