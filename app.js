@@ -254,6 +254,11 @@
     const fnEl = document.getElementById('firstName');
     if (info.lastName && !lnEl.value) lnEl.value = info.lastName;
     if (info.firstName && !fnEl.value) fnEl.value = info.firstName;
+    // 取得した姓・名を端末にキャッシュし、次回はインライン即時プリフィルで開いた瞬間に入る
+    try {
+      if (info.lastName) localStorage.setItem('lastName', info.lastName);
+      if (info.firstName) localStorage.setItem('firstName', info.firstName);
+    } catch (e) { /* 無視 */ }
   }
 
   // 起動：教室名は端末キャッシュ（前回値）で即時表示済み（HTMLの要素直後インライン）。
