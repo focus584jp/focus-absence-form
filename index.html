@@ -22,15 +22,15 @@
       padding: 10px;
       color: #333333;
     }
-    /* 教室名は上部のコンパクトなヘッダーに（カードを1つ削減して縦を詰める） */
-    .topbar {
-      font-size: 17px;
-      font-weight: bold;
-      color: #333;
-      background: rgba(255, 255, 255, 0.75);
-      padding: 8px 12px;
-      border-radius: 8px;
-      margin-bottom: 8px;
+    /* 教室名は入力不可のため、他の入力欄と同じ見た目でグレー表示 */
+    .classroom-display {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      background: #eeeeee;
+      color: #333333;
     }
     .form-group {
       background: white;
@@ -135,10 +135,13 @@
 <body>
   <div id="message"></div>
 
-  <div class="topbar">教室名：<span id="classroomDisplay">-</span></div>
-  <script>try{var c=localStorage.getItem('lastClassroom');if(c)document.getElementById('classroomDisplay').textContent=c;}catch(e){}</script>
-
   <form id="absenceForm" novalidate>
+    <div class="form-group">
+      <label>教室名</label>
+      <div class="classroom-display" id="classroomDisplay">-</div>
+      <script>try{var c=localStorage.getItem('lastClassroom');if(c)document.getElementById('classroomDisplay').textContent=c;}catch(e){}</script>
+    </div>
+
     <div class="form-group">
       <label>生徒名 <span class="field-error" id="err-lastName"></span><span class="field-error" id="err-firstName"></span></label>
       <div class="name-grid">
