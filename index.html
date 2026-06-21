@@ -24,9 +24,6 @@
     }
     /* 教室名は上部のコンパクトなヘッダーに（カードを1つ削減して縦を詰める） */
     .topbar {
-      display: flex;
-      align-items: center;
-      gap: 6px;
       font-size: 15px;
       font-weight: bold;
       color: #333;
@@ -105,7 +102,7 @@
     .period-time { font-size: 12px; color: #888; }
     .submit-btn {
       width: 100%;
-      padding: 13px;
+      padding: 16px;
       background: #DD4B39; /* 欠席＝赤（背景・種別色に合わせる） */
       color: white;
       border: none;
@@ -113,7 +110,7 @@
       font-size: 18px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 4px;
+      margin-top: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -138,7 +135,7 @@
 <body>
   <div id="message"></div>
 
-  <div class="topbar">🏫 教室：<span id="classroomDisplay">-</span></div>
+  <div class="topbar">教室名：<span id="classroomDisplay">-</span></div>
   <script>try{var c=localStorage.getItem('lastClassroom');if(c)document.getElementById('classroomDisplay').textContent=c;}catch(e){}</script>
 
   <form id="absenceForm" novalidate>
