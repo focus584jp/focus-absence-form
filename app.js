@@ -168,25 +168,18 @@
     try { localStorage.setItem('lastName', lastName); localStorage.setItem('firstName', firstName); } catch (e) {}
 
     const payloadStr = JSON.stringify(payload);
-    // GASは別オリジン＆no-corsでレスポンスを読めない。完了を待つ意味が薄いため
-    // sendBeaconで投げて即カードを閉じる（受付確認はLINEプッシュで届く）。
-    let sent = false;
+    // GASのdoPost（受付保存＋LINEプッシュ送信）が終わるまで待ってから閉じる。
+    // no-corsのためレスポンス内容は読めないが、完了でPromiseは解決するため、
+    // 「LINE通知」と「フォームが閉じる」がほぼ同時になる。
     try {
-      if (navigator.sendBeacon) {
-        const blob = new Blob([payloadStr], { type: 'text/plain' });
-        sent = navigator.sendBeacon(GAS_URL + '?action=absence', blob);
-      }
-    } catch (err) {
-      sent = false;
-    }
-    if (!sent) {
-      // 古いWebView等のフォールバック（完了は待たない）
-      fetch(GAS_URL + '?action=absence', {
+      await fetch(GAS_URL + '?action=absence', {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: payloadStr,
       });
+    } catch (err) {
+      // 通信に失敗しても閉じる（受付状況はLINE通知の有無で判断できる）
     }
     if (liff.isInClient()) {
       liff.closeWindow();
