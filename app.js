@@ -196,15 +196,20 @@
     }
   });
 
+  // 遅刻・欠席とも先頭に「1限 13:00〜」を足す（マスタは2限〜のため、ここで補う）
+  function periodsForForm(base) {
+    return [{ label: '1限', time: '13:00〜' }].concat(base);
+  }
+
   // liff 非依存。即実行してフォーム本体を描画する。
   function initFormUI() {
-    buildPeriodGrid(DEFAULT_PERIODS);
+    buildPeriodGrid(periodsForForm(DEFAULT_PERIODS));
     // 裏で最新の時限定義を取得。デフォルトと異なり、かつ未選択のときだけ差し替える（無駄な再描画を避ける）
     fetchConfigJsonp().then(function (config) {
       const anyChecked = document.querySelectorAll('#periodGrid input:checked').length > 0;
       if (config && config.periods && config.periods.length && !anyChecked) {
         if (JSON.stringify(config.periods) !== JSON.stringify(DEFAULT_PERIODS)) {
-          buildPeriodGrid(config.periods);
+          buildPeriodGrid(periodsForForm(config.periods));
         }
       }
     });
