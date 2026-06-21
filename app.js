@@ -145,6 +145,7 @@
     if (!absenceDate) { setFieldError('absenceDate', '選択してください'); firstInvalid = firstInvalid || 'absenceDate'; }
     if (periods.length === 0) { setFieldError('periodGrid', '1つ以上選択してください'); firstInvalid = firstInvalid || 'periodGrid'; }
     if (!reason) { setFieldError('reason', '入力してください'); firstInvalid = firstInvalid || 'reason'; }
+    else if (reason.length > 30) { setFieldError('reason', '30文字以内で入力してください'); firstInvalid = firstInvalid || 'reason'; }
     if (firstInvalid) {
       document.getElementById(firstInvalid).scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
