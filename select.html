@@ -109,21 +109,23 @@
       transition: opacity .15s;
     }
     /* 「まだ下がある＝スクロールできる」を伝える弾むシェブロン */
+    /* 下向きの二重シェブロン（» を90度傾けたデザイン）。回転を保つため上下動はbottomで行う */
     .dd-fade::after {
-      content: '▼';
+      content: '»';
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 4px;
-      text-align: center;
+      left: 50%;
+      bottom: 3px;
       color: #143778;
-      font-size: 15px;
+      font-size: 20px;
+      font-weight: bold;
       line-height: 1;
+      transform: translateX(-50%) rotate(90deg);
+      transform-origin: center;
       animation: ddBounce 1s ease-in-out infinite;
     }
     @keyframes ddBounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(5px); }
+      0%, 100% { bottom: 3px; }
+      50% { bottom: -1px; }
     }
     .dd-fade.hidden { opacity: 0; }
     .err { color: #c62828; font-size: 13px; font-weight: bold; margin-left: 6px; }
